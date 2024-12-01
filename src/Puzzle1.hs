@@ -6,22 +6,41 @@ module Puzzle1
 
 import Util
 import Data.Char ( digitToInt, isDigit )
-import Data.List ( isPrefixOf, elemIndex )
+import Data.List ( isPrefixOf, elemIndex, sort )
 import Data.Maybe ( fromJust )
 
 puzzle1 :: Int -> Solution Int
-puzzle1 1 = collect $ map digitToInt . filter isDigit
-puzzle1 2 = collect readExtraDigits
+puzzle1 1 = sum . calcDistances . sortLists . lists
+puzzle1 2 = sum . calcSimilarities . sortLists . lists
 
-collect :: (String -> [Int]) -> Solution Int
-collect parse input = sum $ map (nums . parse) input
- where nums xs = head xs * 10 + last xs
+lists :: [String] -> ([Int], [Int])
+lists [] = ([], [])
+lists (x : xs) = (l : ls, r : rs)
+ where
+  (ls, rs) = lists xs
+  [l, r] = map read $ words x
 
-readExtraDigits :: String -> [Int]
-readExtraDigits [] = []
-readExtraDigits s@(c : cs)
-  | isDigit c = digitToInt c : readExtraDigits cs
-  | otherwise = map (\d -> succ $ fromJust $ elemIndex d digits) (filter (`isPrefixOf` s) digits) ++ readExtraDigits cs
+distance x y = abs (x - y)
 
-digits :: [String]
-digits = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+sortLists :: ([Int], [Int]) -> ([Int], [Int])
+sortLists (ls,rs) = (sort ls, sort rs)
+
+calcDistances :: ([Int], [Int]) -> [Int]
+calcDistances ([], [])    = []
+calcDistances (l:ls,r:rs) = distance l r : calcDistances (ls,rs)
+
+calcSimilarities :: ([Int], [Int]) -> [Int]
+calcSimilarities ([], _) = []
+calcSimilarities (_, []) = []
+calcSimilarities (l:ls, r:rs)
+    | l == r =
+      let (cl, ls') = gobble l (l:ls)
+          (cr, rs') = gobble l (r:rs)
+      in l * cl * cr : calcSimilarities (ls', rs')
+    | l < r     = calcSimilarities (ls, r:rs)
+    | otherwise = calcSimilarities (l:ls, rs)
+
+gobble :: Int -> [Int] -> (Int, [Int])
+gobble p xs =
+  let (prefix,rest) = span (== p) xs
+  in (length prefix, rest)
