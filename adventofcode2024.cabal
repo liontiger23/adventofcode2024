@@ -26,6 +26,7 @@ library
   exposed-modules:
       Lib
       Puzzle1
+      Puzzle2
       Util
   other-modules:
       Paths_adventofcode2024
