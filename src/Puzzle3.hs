@@ -11,7 +11,7 @@ import Data.Either (fromRight)
 
 puzzle3 :: Int -> Solution Int
 puzzle3 1 = sum . map eval . muls . concat
-puzzle3 2 = undefined
+puzzle3 2 = sum . map eval . muls' . concat
 
 data Mul = Mul Int Int
   deriving (Show, Eq)
@@ -29,6 +29,18 @@ mulsParser = ((:) <$> try mulParser <*> mulsParser)
 
 muls :: String -> [Mul]
 muls s = fromRight [] $ parse mulsParser "" s
+
+mulsParser' :: Stream s m Char => Bool -> ParsecT s u m [Mul]
+mulsParser' True  = (try (string "don't()") *> mulsParser' False)
+                <|> ((:) <$> try mulParser <*> mulsParser' True)
+                <|> try (anyChar *> mulsParser' True)
+                <|> return []
+mulsParser' False = (try (string "do()") *> mulsParser' True)
+                <|> try (anyChar *> mulsParser' False)
+                <|> return []
+
+muls' :: String -> [Mul]
+muls' s = fromRight [] $ parse (mulsParser' True) "" s
 
 upto :: Int -> ParsecT s u m a -> ParsecT s u m [a]
 upto n p

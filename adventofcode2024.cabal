@@ -28,10 +28,10 @@ library
       Puzzle1
       Puzzle2
       Puzzle3
-      Puzzle3_BACKUP_3305264
-      Puzzle3_BASE_3305264
-      Puzzle3_LOCAL_3305264
-      Puzzle3_REMOTE_3305264
+      Puzzle3_BACKUP_3306407
+      Puzzle3_BASE_3306407
+      Puzzle3_LOCAL_3306407
+      Puzzle3_REMOTE_3306407
       Util
   other-modules:
       Paths_adventofcode2024
