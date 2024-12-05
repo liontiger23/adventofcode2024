@@ -14,7 +14,7 @@ import Data.List (isPrefixOf)
 
 puzzle4 :: Int -> Solution Int
 puzzle4 1 = solve1
-puzzle4 2 = undefined
+puzzle4 2 = solve2
 
 solve1 :: Solution Int
 solve1 xxs = sum $ map collect (coords m)
@@ -22,6 +22,28 @@ solve1 xxs = sum $ map collect (coords m)
   m = makeMatrix xxs
   collect :: (Int, Int) -> Int
   collect (i, j) = length $ filter (isPrefixOf "XMAS") $ map (elems m i j) directions
+
+solve2 :: Solution Int
+solve2 xxs = sum $ map collect (coords m)
+ where
+  m = makeMatrix xxs
+  collect :: (Int, Int) -> Int
+  collect (i, j) = if num >= 2 then 1 else 0
+   where num = length $ filter (isPrefixOf "MAS") $ diags m i j
+
+diags :: Matrix a -> Int -> Int -> [[a]]
+diags m i j = map (diag m i j) [NW, NE, SE, SW]
+
+diag :: Matrix a -> Int -> Int -> Direction -> [a]
+diag m i j d =
+  let (x, y) = shift i j d
+  in  elems m x y (opposite d)
+
+opposite :: Direction -> Direction
+opposite NW = SE
+opposite NE = SW
+opposite SE = NW
+opposite SW = NE
 
 
 data Matrix a = Matrix
@@ -42,10 +64,10 @@ elem (Matrix n m xxs) i j
 
 elems :: Matrix a -> Int -> Int -> Direction -> [a]
 elems m i j d =
-  let (x,  y ) = directionCoords d
+  let (i', j') = shift i j d
   in case elem m i j of
        Nothing -> []
-       Just a  -> a : elems m (i+x) (j+y) d
+       Just a  -> a : elems m i' j' d
 
 makeMatrix :: [String] -> Matrix Char
 makeMatrix xxs = Matrix (length $ head xxs) (length xxs) xxs
@@ -66,5 +88,10 @@ directionCoords S  = ( 0,  1)
 directionCoords SW = (-1,  1)
 directionCoords W  = (-1,  0)
 directionCoords NW = (-1, -1)
+
+shift :: Int -> Int -> Direction -> (Int, Int)
+shift i j d =
+  let (x, y) = directionCoords d
+  in  (i + x, j + y)
 
 
