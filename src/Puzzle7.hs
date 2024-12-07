@@ -23,21 +23,19 @@ puzzle7 1 = solve1
 puzzle7 2 = solve2
 
 solve1 :: Solution Integer
-solve1 = sum . mapMaybe (findOps . parseEquation)
+solve1 = sum . mapMaybe (findOps [Add, Mul] . parseEquation)
 
 solve2 :: Solution Integer
 solve2 = undefined
 
 ----------------------------------------
 
-findOps :: Equation -> Maybe Integer
-findOps (Equation res xs) = safeHead $ filter (== res) $ map (eval xs) $ gen (length xs - 1)
+findOps :: [Op] -> Equation -> Maybe Integer
+findOps ops (Equation res xs) = safeHead $ filter (== res) $ map (eval xs) $ gen (length xs - 1)
  where
   gen :: Int -> [[Op]]
-  gen 1 = [[Add], [Mul]]
-  gen n =
-    let next = gen (n - 1)
-    in  map (Add :) next ++ map (Mul :) next
+  gen 1 = map (: []) ops
+  gen n = [ op : gops | gops <- gen (n - 1), op <- ops ]
 
 ----------------------------------------
 
