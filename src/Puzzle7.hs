@@ -31,7 +31,7 @@ solve2 = undefined
 ----------------------------------------
 
 findOps :: [Op] -> Equation -> Maybe Integer
-findOps ops (Equation res xs) = safeHead $ filter (== res) $ map (eval xs) $ gen (length xs - 1)
+findOps ops (Equation res xs) = safeHead $ filter (== res) $ mapMaybe (eval res xs) $ gen (length xs - 1)
  where
   gen :: Int -> [[Op]]
   gen 1 = map (: []) ops
@@ -57,12 +57,12 @@ data Op = Mul | Add
 -- >>> eval [1,2,3] [Mul,Add]
 -- 5
 
-eval :: [Integer] -> [Op] -> Integer
-eval [x] _ = x
-eval (x : y : xs) (op : ops) =
+eval :: Integer -> [Integer] -> [Op] -> Maybe Integer
+eval _ [x] _ = Just x
+eval limit (x : y : xs) (op : ops) =
   let v = case op of
             Mul -> x * y
             Add -> x + y
-  in eval (v : xs) ops
-eval []  _ = undefined
-eval xs [] = undefined
+  in if limit < v then Nothing else eval limit (v : xs) ops
+eval _ []  _ = undefined
+eval _ xs [] = undefined
