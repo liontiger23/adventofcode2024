@@ -30,18 +30,18 @@ solve2 input = undefined
 ----------------------------------------
 
 run :: Map -> Map
-run = head . dropWhile (isJust . guard) . iterate step
+run = last . iter
 
--- >>> pretty $ step $ step $ parseMap ["..#.","#...","..^.","...#"]
--- ["..#.","#.|>","..|.","...#"]
+-- >>> pretty $ last $ iter $ parseMap ["..#.","#...","..^.","...#"]
+-- ["..#.","#.|-","..|.","...#"]
 
-step :: Map -> Map
-step (Map m Nothing) = Map m Nothing
-step (Map m (Just (p, d))) = case M.lookup p' m of
-  Nothing -> Map m' Nothing
-  Just EmptyValue -> Map m' $ Just (p', d)
-  Just (Visited _) -> Map m' $ Just (p', d)
-  Just Obstruction -> let d' = rotate d in Map m' $ Just (move p d', d')
+iter :: Map -> [Map]
+iter cur@(Map m Nothing) = [cur]
+iter cur@(Map m (Just (p, d))) = cur : case M.lookup p' m of
+  Nothing -> iter $ Map m' Nothing
+  Just EmptyValue -> iter $ Map m' $ Just (p', d)
+  Just (Visited _) -> iter $ Map m' $ Just (p', d)
+  Just Obstruction -> let d' = rotate d in iter $ Map m' $ Just (move p d', d')
  where
   p' = move p d
   m' = M.update mark p m
