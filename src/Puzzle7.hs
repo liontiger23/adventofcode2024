@@ -18,19 +18,19 @@ import GHC.Base ((<|>))
 import GHC.List (elem)
 import Data.Char (isDigit)
 
-puzzle7 :: Int -> Solution Int
+puzzle7 :: Int -> Solution Integer
 puzzle7 1 = solve1
 puzzle7 2 = solve2
 
-solve1 :: Solution Int
+solve1 :: Solution Integer
 solve1 = sum . mapMaybe (findOps . parseEquation)
 
-solve2 :: Solution Int
+solve2 :: Solution Integer
 solve2 = undefined
 
 ----------------------------------------
 
-findOps :: Equation -> Maybe Int
+findOps :: Equation -> Maybe Integer
 findOps (Equation res xs) = safeHead $ filter (== res) $ map (eval xs) $ gen (length xs - 1)
  where
   gen :: Int -> [[Op]]
@@ -41,7 +41,7 @@ findOps (Equation res xs) = safeHead $ filter (== res) $ map (eval xs) $ gen (le
 
 ----------------------------------------
 
-data Equation = Equation Int [Int]
+data Equation = Equation Integer [Integer]
   deriving (Show, Eq)
 
 -- >>> parseEquation "123: 1 2 3"
@@ -59,7 +59,7 @@ data Op = Mul | Add
 -- >>> eval [1,2,3] [Mul,Add]
 -- 5
 
-eval :: [Int] -> [Op] -> Int
+eval :: [Integer] -> [Op] -> Integer
 eval [x] _ = x
 eval (x : y : xs) (op : ops) =
   let v = case op of
