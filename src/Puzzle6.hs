@@ -11,17 +11,18 @@ import Prelude hiding (elem)
 import Util
 import Data.Either (fromRight)
 import Data.Maybe (fromJust, isJust)
-import Data.List (isPrefixOf, subsequences, sortBy)
+import Data.List (isPrefixOf, subsequences, sortBy, nub)
 import Data.Map qualified as M
 import Control.Monad (filterM)
 import GHC.Base ((<|>))
+import GHC.List (elem)
 
 puzzle6 :: Int -> Solution Int
 puzzle6 1 = solve1
 puzzle6 2 = solve2
 
 solve1 :: Solution Int
-solve1 = length . M.filter (== Visited) . positions . run . parseMap
+solve1 = length . M.filter visited . positions . run . parseMap
 
 solve2 :: Solution Int
 solve2 input = undefined
@@ -32,18 +33,20 @@ run :: Map -> Map
 run = head . dropWhile (isJust . guard) . iterate step
 
 -- >>> pretty $ step $ step $ parseMap ["..#.","#...","..^.","...#"]
--- ["..#.","#.X>","..X.","...#"]
+-- ["..#.","#.|>","..|.","...#"]
 
 step :: Map -> Map
 step (Map m Nothing) = Map m Nothing
 step (Map m (Just (p, d))) = case M.lookup p' m of
   Nothing -> Map m' Nothing
   Just EmptyValue -> Map m' $ Just (p', d)
-  Just Visited -> Map m' $ Just (p', d)
+  Just (Visited _) -> Map m' $ Just (p', d)
   Just Obstruction -> let d' = rotate d in Map m' $ Just (move p d', d')
  where
   p' = move p d
-  m' = M.update (const $ Just Visited) p m
+  m' = M.update mark p m
+  mark EmptyValue   = Just $ Visited [d]
+  mark (Visited ds) = Just $ Visited $ nub $ d : ds
 
 
 -- >>> parseMap ["..#.","#...","..^.","...#"]
@@ -63,7 +66,7 @@ parseMap input = Map (M.map charValue charMap) (Just (pos, U))
 
 type Position = (Int, Int)
 
-data Value = EmptyValue | Visited | Obstruction
+data Value = EmptyValue | Visited [Direction] | Obstruction
   deriving (Show, Eq)
 
 data Direction = U | R | D | L
@@ -112,7 +115,15 @@ charValue '#' = Obstruction
 
 valueChar :: Value -> Char
 valueChar EmptyValue  = '.'
-valueChar Visited     = 'X'
+valueChar (Visited ds)
+  | (u || d) && (r || l) = '+'
+  |  u || d              = '|'
+  |  r || l              = '-'
+ where
+  u = U `elem` ds
+  r = R `elem` ds
+  d = D `elem` ds
+  l = L `elem` ds
 valueChar Obstruction = '#'
 
 directionChar :: Direction -> Char
@@ -120,3 +131,7 @@ directionChar U = '^'
 directionChar R = '>'
 directionChar D = 'V'
 directionChar L = '<'
+
+visited :: Value -> Bool
+visited (Visited _) = True
+visited _ = False
