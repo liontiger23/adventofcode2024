@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Puzzle5
     ( puzzle5
@@ -12,6 +13,8 @@ import Text.Parsec
 import Data.Either (fromRight)
 import Data.Maybe (fromJust)
 import Data.List (isPrefixOf, subsequences)
+import Data.Set (Set)
+import Data.Set qualified as Set
 
 puzzle5 :: Int -> Solution Int
 puzzle5 1 = solve1
@@ -24,15 +27,13 @@ solve1 input = sum $ map mid $ filter (check rules) orders
 solve2 :: Solution Int
 solve2 input = undefined
 
-check :: [Rule] -> Order -> Bool
+check :: Rules -> Order -> Bool
 check rules order = all checkPair $ filter ((== 2) . length) $ subsequences order
- where
-   checkPair [a,b] = not (any (wrongOrder a b) rules)
-   wrongOrder a b (Rule x y) = a == y && b == x
+ where checkPair [a, b] = Set.notMember (b, a) rules
 
 
-readInput :: [String] -> ([Rule], [Order])
-readInput input = (map parseRule ruleLines, map parseOrder (tail orderLines))
+readInput :: [String] -> (Rules, [Order])
+readInput input = (Set.fromList $ map parseRule ruleLines, map parseOrder (tail orderLines))
  where (ruleLines, orderLines) = break null input
 
 ------------------------------------
@@ -42,13 +43,13 @@ type Order = [Int]
 mid :: [Int] -> Int
 mid xs = xs !! (length xs `div` 2)
 
-data Rule = Rule Int Int
-  deriving (Show, Eq)
+type Rules = Set Rule
+type Rule = (Int, Int)
 
 type Parser s u m a = Stream s m Char => ParsecT s u m a
 
 ruleParser :: Parser s u m Rule
-ruleParser = Rule <$> intParser <* string "|" <*> intParser
+ruleParser = (,) <$> intParser <* string "|" <*> intParser
 
 intParser :: Parser s u m Int
 intParser = read <$> many1 digit
