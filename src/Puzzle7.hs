@@ -26,7 +26,7 @@ solve1 :: Solution Integer
 solve1 = sum . mapMaybe (findOps [Add, Mul] . parseEquation)
 
 solve2 :: Solution Integer
-solve2 = undefined
+solve2 = sum . mapMaybe (findOps [Add, Mul, Or] . parseEquation)
 
 ----------------------------------------
 
@@ -49,7 +49,7 @@ parseEquation :: String -> Equation
 parseEquation s = Equation r xs
  where (r : xs) = map (read . takeWhile isDigit) $ words s
 
-data Op = Mul | Add
+data Op = Mul | Add | Or
   deriving (Show, Eq)
 
 -- >>> eval [1,2,3] [Add,Mul]
@@ -63,6 +63,7 @@ eval limit (x : y : xs) (op : ops) =
   let v = case op of
             Mul -> x * y
             Add -> x + y
+            Or  -> read $ show x ++ show y
   in if limit < v then Nothing else eval limit (v : xs) ops
 eval _ []  _ = undefined
 eval _ xs [] = undefined
