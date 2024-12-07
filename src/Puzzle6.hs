@@ -25,7 +25,7 @@ solve1 :: Solution Int
 solve1 = length . M.filter visited . positions . run . parseMap
 
 solve2 :: Solution Int
-solve2 input = undefined
+solve2 = length . filter (\s -> not (null s) && isJust (guard (last s))) . simulate . parseMap
 
 ----------------------------------------
 
@@ -54,6 +54,19 @@ iter cur@(Map m (Just (p, d))) = cur : case M.lookup p' m of
   mark EmptyValue   = Just $ Visited [d]
   mark (Visited ds) = Just $ Visited $ nub $ d : ds
 
+simulate :: Map -> [[Map]]
+simulate = map (concatMap iter . place) . iter
+ where
+  place :: Map -> [Map]
+  place cur@(Map m Nothing) = []
+  place cur@(Map m g@(Just (p, d))) = case M.lookup p' m of
+    Nothing -> []
+    Just EmptyValue -> [upd]
+    Just (Visited _) -> []
+    Just Obstruction -> []
+   where
+    p' = move p d
+    upd = Map (M.update (const $ Just Obstruction) p' m) g
 
 -- >>> parseMap ["..#.","#...","..^.","...#"]
 -- Map {obstructions = fromList [((0,0),EmptyValue),((0,1),Obstruction),((0,2),EmptyValue),((0,3),EmptyValue),((1,0),EmptyValue),((1,1),EmptyValue),((1,2),EmptyValue),((1,3),EmptyValue),((2,0),Obstruction),((2,1),EmptyValue),((2,3),EmptyValue),((3,0),EmptyValue),((3,1),EmptyValue),((3,2),EmptyValue),((3,3),Obstruction)], guard = Just ((2,2),U)}
