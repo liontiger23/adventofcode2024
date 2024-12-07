@@ -12,7 +12,7 @@ import Util
 import Text.Parsec
 import Data.Either (fromRight)
 import Data.Maybe (fromJust)
-import Data.List (isPrefixOf, subsequences)
+import Data.List (isPrefixOf, subsequences, sortBy)
 import Data.Set (Set)
 import Data.Set qualified as Set
 
@@ -28,8 +28,18 @@ solve2 :: Solution Int
 solve2 input = undefined
 
 check :: Rules -> Order -> Bool
-check rules order = all checkPair $ filter ((== 2) . length) $ subsequences order
- where checkPair [a, b] = Set.notMember (b, a) rules
+check rules order = order == reorder rules order
+
+reorder :: Rules -> Order -> Order
+reorder rules = sortBy (ruleOrdering rules)
+
+ruleOrdering :: Rules -> Int -> Int -> Ordering
+ruleOrdering rules x y
+  | x == y = EQ
+  | Set.member (x, y) rules = LT
+  | Set.notMember (x, y) rules = GT
+  | otherwise = LT
+
 
 
 readInput :: [String] -> (Rules, [Order])
