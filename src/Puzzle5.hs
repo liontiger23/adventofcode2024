@@ -25,7 +25,8 @@ solve1 input = sum $ map mid $ filter (check rules) orders
  where (rules, orders) = readInput input
 
 solve2 :: Solution Int
-solve2 input = undefined
+solve2 input = sum $ map (mid . reorder rules) (filter (not .check rules) orders)
+ where (rules, orders) = readInput input
 
 check :: Rules -> Order -> Bool
 check rules order = order == reorder rules order
