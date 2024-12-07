@@ -33,15 +33,21 @@ run :: Map -> Map
 run = last . iter
 
 -- >>> pretty $ last $ iter $ parseMap ["..#.","#...","..^.","...#"]
--- ["..#.","#.|-","..|.","...#"]
+-- ["..#.","#.+-","..|.","...#"]
+-- >>> pretty $ last $ iter $ parseMap ["....","..#.",".#^#","..#."]
+-- ["....","..#.",".#^#","..#."]
 
 iter :: Map -> [Map]
 iter cur@(Map m Nothing) = [cur]
 iter cur@(Map m (Just (p, d))) = cur : case M.lookup p' m of
   Nothing -> iter $ Map m' Nothing
   Just EmptyValue -> iter $ Map m' $ Just (p', d)
-  Just (Visited _) -> iter $ Map m' $ Just (p', d)
-  Just Obstruction -> let d' = rotate d in iter $ Map m' $ Just (move p d', d')
+  Just (Visited ds)
+    | d `elem` ds -> [] -- cycle detected
+    | otherwise   -> iter $ Map m' $ Just (p', d)
+  Just Obstruction -> case M.lookup p m of
+    Just (Visited ds) | d `elem` ds -> [] -- trivial cycle detected
+    _ -> let d' = rotate d in iter $ Map m' $ Just (p, d')
  where
   p' = move p d
   m' = M.update mark p m
