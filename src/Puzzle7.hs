@@ -31,11 +31,15 @@ solve2 = sum . mapMaybe (findOps [Add, Mul, Or] . parseEquation)
 ----------------------------------------
 
 findOps :: [Op] -> Equation -> Maybe Integer
-findOps ops (Equation res xs) = safeHead $ filter (== res) $ mapMaybe (eval res xs) $ gen (length xs - 1)
+findOps ops (Equation res vs) = safeHead $ filter (== res) $ gen vs
  where
-  gen :: Int -> [[Op]]
-  gen 1 = map (: []) ops
-  gen n = [ op : gops | gops <- gen (n - 1), op <- ops ]
+  gen :: [Integer] -> [Integer]
+  gen [] = undefined
+  gen [x] = [x]
+  gen (x : y : xs) = concatMap (gen . (: xs)) $ filter (<= res) $ map (evalOne x y) ops
+  evalOne x y Mul = x * y
+  evalOne x y Add = x + y
+  evalOne x y Or  = read $ show x ++ show y
 
 ----------------------------------------
 
@@ -51,19 +55,3 @@ parseEquation s = Equation r xs
 
 data Op = Mul | Add | Or
   deriving (Show, Eq)
-
--- >>> eval [1,2,3] [Add,Mul]
--- 9
--- >>> eval [1,2,3] [Mul,Add]
--- 5
-
-eval :: Integer -> [Integer] -> [Op] -> Maybe Integer
-eval _ [x] _ = Just x
-eval limit (x : y : xs) (op : ops) =
-  let v = case op of
-            Mul -> x * y
-            Add -> x + y
-            Or  -> read $ show x ++ show y
-  in if limit < v then Nothing else eval limit (v : xs) ops
-eval _ []  _ = undefined
-eval _ xs [] = undefined
