@@ -22,7 +22,7 @@ solve1 :: Solution Int
 solve1 = length . nub . mapMaybe (safeHead . tail) . mapAntinodes . parseMap
 
 solve2 :: Solution Int
-solve2 = undefined
+solve2 = length . nub . concat . mapAntinodes . parseMap
 
 ----------------------------------------
 
