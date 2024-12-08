@@ -11,6 +11,7 @@ import Puzzle4
 import Puzzle5
 import Puzzle6
 import Puzzle7
+import Puzzle8
 import System.Environment (getArgs)
 
 solve :: IO ()
@@ -24,6 +25,7 @@ solve = do
     [Just 5, Just p] -> process (puzzle5 p)
     [Just 6, Just p] -> process (puzzle6 p)
     [Just 7, Just p] -> process (puzzle7 p)
+    [Just 8, Just p] -> process (puzzle8 p)
     _ -> putStrLn $ "Unknown puzzle #" ++ concat args
  where
   process :: Show a => Solution a -> IO ()
