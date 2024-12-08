@@ -13,28 +13,25 @@ import Data.Either (fromRight)
 import Data.Maybe (fromJust, isJust, catMaybes, mapMaybe)
 import Data.List (isPrefixOf, subsequences, sortBy, nub)
 import Data.Map qualified as M
-import Data.Set qualified as S
-import Control.Monad (filterM)
-import GHC.Base ((<|>))
-import GHC.List (elem)
-import Data.Char (isDigit)
 
 puzzle8 :: Int -> Solution Int
 puzzle8 1 = solve1
 puzzle8 2 = solve2
 
 solve1 :: Solution Int
-solve1 = S.size . placeAntinodes . parseMap
+solve1 = length . nub . mapMaybe (safeHead . tail) . mapAntinodes . parseMap
 
 solve2 :: Solution Int
 solve2 = undefined
 
 ----------------------------------------
 
-placeAntinodes :: Map -> S.Set Position
-placeAntinodes m@(Map nx ny _) = S.fromList antinodes
+-- >>> mapAntinodes $ parseMap ["....",".a..","..a.","...."]
+-- [[(1,1),(0,0)],[(2,2),(3,3)]]
+
+mapAntinodes :: Map -> [[Position]]
+mapAntinodes m@(Map nx ny _) = map (takeWhile inbounds . uncurry antinodes) $ groupPairs m
  where
-  antinodes = filter inbounds $ map (uncurry antinode) $ groupPairs m
   inbounds :: Position -> Bool
   inbounds (x, y) = 0 <= x && x < nx && 0 <= y && y < ny
 
@@ -44,14 +41,15 @@ groupPairs (Map _ _ m) = concatMap (pairs . charPositions) $ nub $ M.elems m
   charPositions :: Char -> [Position]
   charPositions c = M.keys $ M.filter (== c) m
 
--- >>> antinode (1,2) (2,3)
--- (0,1)
+-- >>> take 2 $ antinodes (1,2) (2,3)
+-- [(1,2),(0,1)]
 --
--- >>> antinode (2,3) (1,2)
--- (3,4)
+-- >>> take 2 $ antinodes (2,3) (1,2)
+-- [(2,3),(3,4)]
 
-antinode :: Position -> Position -> Position
-antinode x y = x .+. x .-. y
+antinodes :: Position -> Position -> [Position]
+antinodes x y = iterate (d .+.) x
+ where d = x .-. y
 
 -- >>> parseMap ["..0.",".a..","..a.","...0"]
 -- Map 4 4 (fromList [((1,1),'a'),((2,0),'0'),((2,2),'a'),((3,3),'0')])
