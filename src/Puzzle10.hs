@@ -23,7 +23,7 @@ solve1 :: Solution Int
 solve1 = length . nub . map shrink . fullTrails 0 10 . parseMap
 
 solve2 :: Solution Int
-solve2 = undefined
+solve2 = sum . map length . groupBy (\x y -> head x == head y) . fullTrails 0 10 . parseMap
 
 ----------------------------------------
 
