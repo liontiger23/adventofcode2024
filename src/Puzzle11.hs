@@ -24,7 +24,8 @@ solve1 :: Solution Integer
 solve1 = fromIntegral . length . (!! 25) . iterate blink . map read . words . head
 
 solve2 :: Solution Integer
-solve2 = sum . map (memoizedBlink 75 . read) . words . head
+solve2 = run . fmap sum . mapM (blinkN 75 . read) . words . head
+ where run s = evalState s M.empty
 
 ----------------------------------------
 
@@ -47,25 +48,15 @@ blink (x : xs)
   str = show x
   (l, r) = splitAt (length str `div` 2) str
 
--- Stolen from https://stackoverflow.com/a/44508289
+type Memo a = State (M.Map (Integer, Integer) Integer) a
 
-type Memo = State (M.Map (Int, Integer) Integer) Integer
-
-memoizedBlink :: Int -> Integer -> Integer
-memoizedBlink n d = evalState (blink' (n,d)) M.empty
+blinkN :: Integer -> Integer -> Memo Integer
+blinkN 0 _ = pure 1
+blinkN n x = get >>= \m -> maybe calc pure (M.lookup (n, x) m)
  where
-  memoo :: ((Int, Integer) -> Memo) -> (Int, Integer) -> Memo
-  memoo f x = gets (M.lookup x) >>= maybe b' return
-   where
-    b' = do
-      b <- f x
-      modify $ M.insert x b
-      return b
-  blink' (0,_) = return 1
-  blink' (n,x)
-    | x == 0 = memoo blink' ((n - 1),1)
-    | even (length str) = (+) <$> memoo blink' ((n - 1),(read l)) <*> memoo blink' ((n - 1),(read r))
-    | otherwise = memoo blink' ((n - 1),(x * 2024))
-   where
-    str = show x
-    (l, r) = splitAt (length str `div` 2) str
+  calc = do
+    let rs = blink [x]
+    res <- sum <$> mapM (blinkN (n - 1)) rs
+    modify $ M.insert (n, x) res
+    pure res
+
