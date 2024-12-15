@@ -1,5 +1,6 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 
 module DisjointSet
     ( DisjointSet
@@ -7,6 +8,7 @@ module DisjointSet
     , insert
     , append
     , fromList
+    , fromListBy
     , elems
     , representatives
     , union
@@ -23,6 +25,7 @@ import Data.Map qualified as M
 import Data.Maybe (fromMaybe, fromJust, isJust)
 import Data.List (groupBy)
 import Control.Monad.State
+import Data.Foldable (traverse_)
 
 newtype DisjointSet a = DisjointSet
   { internals :: Map a a }
@@ -57,6 +60,23 @@ append xs ys = foldr (uncurry union) xs $ M.toList $ internals ys
 
 fromList :: Ord a => [a] -> DisjointSet a
 fromList = foldr insert empty
+
+-- >>> equivalenceClasses $ fromListBy (\x y -> x == y + 1 || y == x + 1) [1,2,4,5,6]
+-- [[1,2],[4,5,6]]
+-- >>> equivalenceClasses $ fromListBy (\x y -> x == y + 1 || y == x + 1) [5,1,4,2,6]
+-- [[1,2],[4,5,6]]
+-- >>> groupBy (\x y -> x == y + 1 || y == x + 1) [1,2,4,5,6]
+-- [[1,2],[4,5],[6]]
+-- >>> groupBy (\x y -> x == y + 1 || y == x + 1) [5,1,4,2,6]
+-- [[5],[1],[4],[2],[6]]
+
+fromListBy :: Ord a => (a -> a -> Bool) -> [a] -> DisjointSet a
+fromListBy eq xs = execState collect $ fromList xs
+ where
+  collect = traverse_ (uncurry unionS) $ filter (uncurry eq) $ pairs xs --[(x, y) | x <- xs, y <- xs, x `eq` y]
+  pairs [] = []
+  pairs (y:ys) = map (y,) ys ++ pairs ys
+
 
 elems :: DisjointSet a -> [a]
 elems = M.keys . internals
