@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Puzzle13
     ( puzzle13
@@ -23,25 +22,25 @@ import Control.Monad (void)
 import Data.Foldable (traverse_)
 import Data.List.Split (splitOn, splitWhen)
 
-puzzle13 :: Int -> Solution Int
+puzzle13 :: Int -> Solution Integer
 puzzle13 1 = solve1
 puzzle13 2 = solve2
 
-solve1 :: Solution Int
+solve1 :: Solution Integer
 solve1 = sum . mapMaybe (safeHead . sort . map cost . filter (<= (100, 100)) . solutions) . parseGames
 
-solve2 :: Solution Int
+solve2 :: Solution Integer
 solve2 = undefined
 
 ----------------------------------------
 
-cost :: (Int, Int) -> Int
+cost :: (Integer, Integer) -> Integer
 cost (a, b) = 3 * a + b
 
 -- >>> solutions $ parseGame ["Button A: X+94, Y+34", "Button B: X+22, Y+67", "Prize: X=8400, Y=5400"]
 -- [(80,40)]
 
-solutions :: Game -> [(Int, Int)]
+solutions :: Game -> [(Integer, Integer)]
 solutions (Game a b p) = [(an, bn) | bn <- fill b p, an <- fill a (p .-. (bn .*. b)), ((an .*. a) .+. (bn .*. b)) == p]
  where
   fill c n = takeWhile (\k -> k .*. c <= n) [0..]
@@ -62,12 +61,12 @@ parseGame [a, b, p] = Game (parseCoordinate a) (parseCoordinate b) (parseCoordin
 parseCoordinate :: String -> Coordinate
 parseCoordinate s = let (x, y) = span (/= ',') s in (parseInt x, parseInt y)
 
-parseInt :: String -> Int
+parseInt :: String -> Integer
 parseInt = read . takeWhile isDigit . dropWhile (not . isDigit)
 
 ----------------------------------------
 
-type Coordinate = (Int, Int)
+type Coordinate = (Integer, Integer)
 
 -- >>> (1,0) <= (1,1)
 -- True
@@ -89,7 +88,7 @@ type Coordinate = (Int, Int)
 (.-.) :: Coordinate -> Coordinate -> Coordinate
 (a, b) .-. (c, d) = (a - c, b - d)
 
-(.*.) :: Int -> Coordinate -> Coordinate
+(.*.) :: Integer -> Coordinate -> Coordinate
 k .*. (x, y) = (k * x, k * y)
 
 data Game = Game
