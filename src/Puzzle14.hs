@@ -13,8 +13,8 @@ import Data.Char (digitToInt, isDigit)
 import Data.Map ((!))
 import Data.Map qualified as M
 import Data.Set qualified as S
-import Data.Maybe (isJust, mapMaybe, catMaybes)
-import Data.List (nub, groupBy, elem, sort, group)
+import Data.Maybe (isJust, mapMaybe, catMaybes, isNothing)
+import Data.List (nub, groupBy, elem, sort, group, findIndex, isPrefixOf, tails)
 import Control.Monad.State
 import Control.Monad (void)
 import Data.Foldable (traverse_)
@@ -27,10 +27,31 @@ puzzle14 2 = solve2
 solve1 :: Solution Int
 solve1 = product . map length . group . sort . mapMaybe (quadrant 101 103 . (!! 100) . uncurry (simulate 101 103) . parseCoordinates)
 
+-- Will print infinitely
 solve2 :: Solution Int
-solve2 = undefined
+solve2 = length . show . map (debug "") . skip (12 : iterate (const 100) 100) . zip [0..] . slice 101 103 . map (uncurry (simulate 101 103) . parseCoordinates)
 
 ----------------------------------------
+
+-- >>> skip (12 : iterate (const 100) 100) [0..1000]
+-- [12,113,214,315,416,517,618,719,820,921]
+-- >>> skip (88 : iterate (const 102) 102) [0..1000]
+-- [88,191,294,397,500,603,706,809,912]
+
+skip :: [Int] -> [a] -> [a]
+skip [] xs = xs
+skip (s : ss) xs = case drop s xs of
+  []       -> []
+  (x : xs') -> x : skip ss xs'
+
+slice :: Integer -> Integer -> [[Coordinate]] -> [Map]
+slice n m = map (Map n m) . transpose
+
+-- >>> take 10 $ transpose [[0..],[0..]]
+-- [[0,0],[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,9]]
+
+transpose :: [[a]] -> [[a]]
+transpose xs = map head xs : transpose (map tail xs)
 
 -- >>> quadrant 11 7 (0, 0)
 -- Just 1
@@ -122,3 +143,14 @@ type Coordinate = (Integer, Integer)
 (.*.) :: Integer -> Coordinate -> Coordinate
 k .*. (x, y) = (k * x, k * y)
 
+data Map = Map Integer Integer [Coordinate]
+
+instance Show Map where
+  show = unlines . mapLines
+
+mapLines :: Map -> [String]
+mapLines (Map n m cs) = [[ch (x, y) | x <- [0..(n-1)]] | y <- [0..(m-1)]]
+ where
+  ch p
+    | p `elem` cs = 'X'
+    | otherwise   = '.'
