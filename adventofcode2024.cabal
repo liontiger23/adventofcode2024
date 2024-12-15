@@ -30,6 +30,7 @@ library
       Puzzle10
       Puzzle11
       Puzzle12
+      Puzzle13
       Puzzle2
       Puzzle3
       Puzzle4
@@ -51,6 +52,7 @@ library
     , containers
     , mtl
     , parsec
+    , split
   default-language: Haskell2010
 
 executable adventofcode2024-exe
@@ -68,6 +70,7 @@ executable adventofcode2024-exe
     , containers
     , mtl
     , parsec
+    , split
   default-language: Haskell2010
 
 test-suite adventofcode2024-test
@@ -86,4 +89,5 @@ test-suite adventofcode2024-test
     , containers
     , mtl
     , parsec
+    , split
   default-language: Haskell2010

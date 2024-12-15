@@ -23,6 +23,7 @@ dependencies:
 - parsec
 - containers
 - mtl
+- split
 
 ghc-options:
 - -Wall
