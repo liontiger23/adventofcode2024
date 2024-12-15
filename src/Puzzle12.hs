@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE TupleSections #-}
 
 module Puzzle12
     ( puzzle12
@@ -29,7 +30,7 @@ solve1 :: Solution Integer
 solve1 = sum . map cost . regions . parseMap
 
 solve2 :: Solution Integer
-solve2 = undefined
+solve2 = sum . map discountCost . regions . parseMap
 
 ----------------------------------------
 
@@ -62,6 +63,9 @@ sameRegion m x y = areAdjacent x y && M.lookup x m == M.lookup y m
 cost :: Region -> Integer
 cost r = area r * perimeter r
 
+discountCost :: Region -> Integer
+discountCost r = area r * sides r
+
 area :: Region -> Integer
 area = fromIntegral . length
 
@@ -79,6 +83,12 @@ perimeter :: Region -> Integer
 perimeter r = sum $ map count $ S.toList r
  where
   count c = fromIntegral $ length $ filter (`S.notMember` r) $ adjacent c
+
+sides :: Region -> Integer
+sides r = fromIntegral $ length $ DS.equivalenceClasses $ DS.fromListBy sameSide border
+ where
+  border = concatMap (\c -> map (c,) $ filter (`S.notMember` r) $ adjacent c) (S.toList r)
+  sameSide (in1, out1) (in2, out2) = areAdjacent in1 in2 && areAdjacent out1 out2
 
 areAdjacent :: Coordinate -> Coordinate -> Bool
 areAdjacent (a, b) (c, d) = abs (a - c) + abs (b - d) == 1
