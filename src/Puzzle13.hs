@@ -27,23 +27,36 @@ puzzle13 1 = solve1
 puzzle13 2 = solve2
 
 solve1 :: Solution Integer
-solve1 = sum . mapMaybe (safeHead . sort . map cost . filter (<= (100, 100)) . solutions) . parseGames
+solve1 = sum . mapMaybe (fmap cost . solution) . parseGames
 
 solve2 :: Solution Integer
-solve2 = undefined
+solve2 = sum . mapMaybe (fmap cost . solution . adjust) . parseGames
 
 ----------------------------------------
 
+-- For each game need to solve following equations in integers for (an, bn):
+--   ax*an + bx*bn = px
+--   ay*an + by*bn = py
+--
+-- After simplification:
+--
+--   an = (py*bx - px*by) / (bx*ay - by*ax)
+--   bn = (px*ay - py*ax) / (bx*ay - by*ax)
+
+solution :: Game -> Maybe (Integer, Integer)
+solution (Game (ax, ay) (bx, by) (px, py))
+  | anum `mod` denom == 0 && bnum `mod` denom == 0 = Just (anum `div` denom, bnum `div` denom)
+  | otherwise = Nothing
+ where
+  denom = bx * ay - by * ax
+  anum = py * bx - px * by
+  bnum = px * ay - py * ax
+
+adjust :: Game -> Game
+adjust (Game a b p) = Game a b (10000000000000 .*. (1, 1) .+. p)
+
 cost :: (Integer, Integer) -> Integer
 cost (a, b) = 3 * a + b
-
--- >>> solutions $ parseGame ["Button A: X+94, Y+34", "Button B: X+22, Y+67", "Prize: X=8400, Y=5400"]
--- [(80,40)]
-
-solutions :: Game -> [(Integer, Integer)]
-solutions (Game a b p) = [(an, bn) | bn <- fill b p, an <- fill a (p .-. (bn .*. b)), ((an .*. a) .+. (bn .*. b)) == p]
- where
-  fill c n = takeWhile (\k -> k .*. c <= n) [0..]
 
 ----------------------------------------
 
