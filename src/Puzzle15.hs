@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Puzzle15
     ( puzzle15
@@ -29,7 +30,7 @@ solve1 :: Solution Int
 solve1 = sum . map gps . M.keys . M.filter (== 'O') . uncurry simulate . parseInput
 
 solve2 :: Solution Int
-solve2 = undefined
+solve2 = sum . map gps . M.keys . M.filter (== '[') . uncurry simulate . parseInput . map widen
 
 ----------------------------------------
 
@@ -57,10 +58,32 @@ shift m c x d = --debug (pretty m ++ "\n" ++ [c] ++ show x) $
   case m ! x of
     '#' -> Nothing
     '.' -> Just $ M.insert x c m
-    'O' -> shift (M.insert x c m) 'O' (x .>. d) d
+    'O' -> shiftNarrow c x m
+    '[' -> shiftWide (x .>. '>')
+    ']' -> shiftWide (x .>. '<')
+ where
+  shiftNarrow b x m = shift (M.insert x b m) (m ! x) (x .>. d) d
+  shiftWide y = case d of
+    '<' -> shiftNarrow c x m
+    '>' -> shiftNarrow c x m
+    '^' -> shiftBoth
+    'v' -> shiftBoth
+   where
+    shiftBoth = case shiftNarrow c x m of
+      Nothing -> Nothing
+      Just m' -> shiftNarrow '.' y m'
 
 line :: Coordinate -> Direction -> Map -> Map
 line p d m = M.restrictKeys m $ S.fromList $ iterate (.>. d) p
+
+widen :: String -> String
+widen = concatMap (\case
+    '#' -> "##"
+    'O' -> "[]"
+    '.' -> ".."
+    '@' -> "@."
+    x   -> [x]
+  )
 
 parseInput :: [String] -> (Map, [Direction])
 parseInput ss = let (m, d) = break null ss in (parseMap m, concat $ tail d)
