@@ -46,19 +46,18 @@ simulate m ds = execState steps m'
 step :: Coordinate -> Direction -> State Map Coordinate
 step p d = do
   m <- get
-  let line = tail $ iterate (.>. d) p
-  case shift m '.' line of
+  case shift m '.' (p .>. d) d of
     Nothing -> pure p -- $ debug ("[put " ++ show p ++ " " ++ [d] ++ " stop ]\n") p
     Just m' -> do
       put m' -- (debugWith ("[put " ++ show p ++ " " ++ [d] ++ " ]\n") (prettyWithPos $ p .>. d) m')
       pure (p .>. d)
 
-shift :: Map -> Char -> [Coordinate] -> Maybe Map
-shift m c (x : xs) = --debug (pretty m ++ "\n" ++ [c] ++ show x) $
+shift :: Map -> Char -> Coordinate -> Direction -> Maybe Map
+shift m c x d = --debug (pretty m ++ "\n" ++ [c] ++ show x) $
   case m ! x of
     '#' -> Nothing
     '.' -> Just $ M.insert x c m
-    'O' -> shift (M.insert x c m) 'O' xs
+    'O' -> shift (M.insert x c m) 'O' (x .>. d) d
 
 line :: Coordinate -> Direction -> Map -> Map
 line p d m = M.restrictKeys m $ S.fromList $ iterate (.>. d) p
