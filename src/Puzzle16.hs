@@ -31,18 +31,45 @@ solve1 :: Solution Integer
 solve1 = run1 . fromCharMap . parseCharMap
 
 solve2 :: Solution Integer
-solve2 = undefined
+solve2 = run2 . fromCharMap . parseCharMap
 
 ----------------------------------------
 
--- >>> (\(m, s, e) -> findPaths m s) $ fromCharMap $ parseCharMap ["####", "#E.#", "#.S#", "####"]
+-- >>> (\(m, s, e) -> findPaths s m) $ fromCharMap $ parseCharMap ["####", "#E.#", "#.S#", "####"]
 -- fromList [((1,1),fromList [(N,3002),(E,4002),(S,3002),(W,2002)]),((1,2),fromList [(N,3001),(E,4001),(S,3001),(W,2001)]),((2,1),fromList [(N,1001),(E,2001),(S,3001),(W,2001)]),((2,2),fromList [(N,1000),(E,0),(S,1000),(W,2000)])]
+--
+-- >>> backtrack (1,1) W $ (\(m, s, e) -> findPaths s m) $ fromCharMap $ parseCharMap ["####", "#E.#", "#.S#", "####"]
+-- [[(1,1),(2,1),(2,2)]]
 
 run1 :: (Map, Coordinate, Coordinate) -> Integer
-run1 (m, s, e) = minimum $ M.elems $ findPaths m s ! e
+run1 (m, s, e) = minimum $ M.elems $ findPaths s m ! e
 
-findPaths :: Map -> Coordinate -> Map
-findPaths m s = execState (bfs (+ 1) (+ 1000) s) $ M.insert s (M.singleton E 0) m
+run2 :: (Map, Coordinate, Coordinate) -> Integer
+run2 (m, s, e) = fromIntegral $ length $ nub $ concat $ concatMap (\d -> backtrack e d m') ds
+ where
+  m' = findPaths s m
+  c = minimum $ M.elems (m' ! e)
+  ds = M.keys $ M.filter (== c) (m' ! e)
+
+backtrack :: Coordinate -> Direction -> Map -> [[Coordinate]]
+backtrack p d m
+  | null paths = [[p]]
+  | otherwise  = map (p:) paths
+ where
+  paths = concatMap backtrackDirection directionsToTry
+  ds = m ! p
+  c = ds ! d
+  directionsToTry = d : filter ((== c - 1000) . (ds !)) [clockwise d, counterclockwise d]
+  backtrackDirection d' = case M.lookup p' m of
+    Nothing -> []
+    Just ds'
+      | ds' ! d' == (ds ! d') - 1 -> backtrack p' d' m
+      | otherwise -> []
+   where
+    p' = p .>. invert d'
+
+findPaths :: Coordinate -> Map -> Map
+findPaths s m = execState (bfs (+ 1) (+ 1000) s) $ M.insert s (M.singleton E 0) m
 
 bfs :: (Integer -> Integer) -> (Integer -> Integer) -> Coordinate -> State Map [Coordinate]
 bfs step rotate p = do
@@ -131,6 +158,9 @@ counterclockwise S = E
 counterclockwise W = S
 counterclockwise N = W
 counterclockwise E = N
+
+invert :: Direction -> Direction
+invert = clockwise . clockwise
 
 -- >>> take 10 $ iterate (.>. E) (1,1)
 -- [(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1)]
