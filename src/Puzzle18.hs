@@ -17,23 +17,29 @@ import Data.Map.Strict ((!))
 import Data.Map.Strict qualified as M
 import Data.Set qualified as S
 import Data.Maybe (isJust, mapMaybe, isNothing, fromJust)
-import Data.List (nub, groupBy, elem, minimumBy)
+import Data.List (nub, groupBy, elem, minimumBy, inits)
 import Control.Monad.State
 import Control.Monad (void)
 import Data.Foldable (traverse_, foldlM)
 import Data.Function (on)
 
-puzzle18 :: Int -> Solution Int
+puzzle18 :: Int -> Solution Result
 puzzle18 1 = solve1
 puzzle18 2 = solve2
 
 bound = 71
 
-solve1 :: Solution Int
-solve1 = fromJust . (! (bound - 1, bound - 1)) . execState (wave 0 [(0, 0)]) . markBytes (defaultMap bound) . take 1024 . parseBytes
+solve1 :: Solution Result
+solve1 = Part1 . fromJust . (! (bound - 1, bound - 1)) . execState (wave 0 [(0, 0)]) . markBytes (defaultMap bound) . take 1024 . parseBytes
 
-solve2 :: Solution Int
-solve2 = undefined
+solve2 :: Solution Result
+solve2 = Part2 . last . head . filter (((== Just Nothing) . M.lookup (bound - 1, bound - 1)) . execState (wave 0 [(0, 0)]) . markBytes (defaultMap bound)) . inits . parseBytes
+
+data Result = Part1 Int | Part2 Coordinate
+
+instance Show Result where
+  show (Part1 x) = show x
+  show (Part2 (x, y)) = show x ++ "," ++ show y
 
 ----------------------------------------
 
