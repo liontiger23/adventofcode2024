@@ -1,5 +1,6 @@
 module Util
     ( Solution
+    , Input
     , safeHead
     , debug
     , debugWith
@@ -7,7 +8,9 @@ module Util
 
 import Debug.Trace (trace)
 
-type Solution a = [String] -> a
+type Solution a = Input -> a
+
+type Input = [String]
 
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
