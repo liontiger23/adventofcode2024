@@ -19,11 +19,10 @@ import Data.Set qualified as S
 import Data.Maybe (isJust, mapMaybe, isNothing, fromJust)
 import Data.List (nub, groupBy, elem, minimumBy, inits, sort, sortBy, stripPrefix)
 import Control.Monad.State
-import Control.Monad (void)
+import Control.Monad (void, zipWithM)
 import Data.Foldable (traverse_, foldlM, asum)
 import Data.Function (on)
 import Data.List.Split (splitOn)
-import Text.Parsec
 import Data.Ord (comparing, Down (Down))
 
 puzzle19 :: Int -> Solution Result
@@ -31,24 +30,28 @@ puzzle19 1 = solve1
 puzzle19 2 = solve2
 
 solve1 :: Solution Result
-solve1 = length . filter (not . null) . uncurry mapVariants . parseInput
+solve1 = fromIntegral . length . filter (/= 0) . uncurry mapVariants . parseInput
 
 solve2 :: Solution Result
-solve2 = undefined
+solve2 = sum . uncurry mapVariants . parseInput
 
-type Result = Int
+type Result = Integer
 
 ----------------------------------------
 
-mapVariants :: [Pattern] -> [String] -> [[[Pattern]]]
-mapVariants ps = map (variants ps)
+mapVariants :: [Pattern] -> [String] -> [Integer]
+mapVariants ps ss = evalState (mapM (variants ps) ss) M.empty
 
-variants :: [Pattern] -> String -> [[Pattern]]
-variants _ [] = [[]]
-variants ps s = concat $ zipWith variants' ps $ map (`stripPrefix` s) ps
- where
-  variants' p Nothing   = []
-  variants' p (Just s') = map (p :) $ variants ps s'
+variants :: [Pattern] -> String -> State Mem Integer
+variants _ [] = pure 1
+variants ps s = do
+  m <- get
+  case M.lookup s m of
+    Just v  -> pure v
+    Nothing -> do
+      res <- sum <$> mapM (variants ps) (mapMaybe (`stripPrefix` s) ps)
+      modify (M.insert s res)
+      pure res
 
 parseInput :: Input -> ([Pattern], [String])
 parseInput input =
@@ -58,3 +61,5 @@ parseInput input =
 ----------------------------------------
 
 type Pattern = String
+
+type Mem = M.Map String Integer
