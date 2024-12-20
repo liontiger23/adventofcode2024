@@ -30,24 +30,17 @@ puzzle20 1 = solve1
 puzzle20 2 = solve2
 
 solve1 :: Solution Result
-solve1 = length . filter (>= 100) . cheats . runWave . fromCharMap . parseCharMap
+solve1 = length . filter (>= 100) . cheats 2 . runWave . fromCharMap . parseCharMap
 
 solve2 :: Solution Result
-solve2 = undefined
+solve2 = length . filter (>= 100) . cheats 20 . runWave . fromCharMap . parseCharMap
 
 type Result = Int
 
 ----------------------------------------
 
-cheats :: Map -> [Int]
-cheats m = concatMap cheatSavings $ M.keys m
- where
-  cheatSavings p = map diff $ neighboursN 2 p
-   where
-    start = fromJust $ m ! p
-    diff x = case M.lookup x m of
-      Just (Just v)  -> v - start - 2
-      _ -> 0
+cheats :: Int -> Map -> [Int]
+cheats n m = [a - b - dist2 x y | (x, Just a) <- M.toList m, (y, Just b) <- M.toList m, a > b, dist2 x y <= n]
 
 runWave :: (Map, Coordinate, Coordinate) -> Map
 runWave (m, s, e) = execState (wave 0 [s]) m
@@ -109,19 +102,6 @@ neighbours (x, y) =
   , (x, y + 1)
   , (x, y - 1)
   ]
-
--- >>> neighboursN 1 (0,0)
--- [(1,0),(-1,0),(0,1),(0,-1)]
--- 
--- >>> neighboursN 2 (0,0)
--- [(2,0),(1,1),(1,-1),(-2,0),(-1,1),(-1,-1),(1,1),(-1,1),(0,2),(1,-1),(-1,-1),(0,-2)]
---
--- >>> neighboursN 3 (0,0)
--- [(3,0),(2,1),(2,-1),(2,1),(1,2),(2,-1),(1,-2),(-3,0),(-2,1),(-2,-1),(-2,1),(-1,2),(-2,-1),(-1,-2),(2,1),(1,2),(-2,1),(-1,2),(1,2),(-1,2),(0,3),(2,-1),(1,-2),(-2,-1),(-1,-2),(1,-2),(-1,-2),(0,-3)]
-
-neighboursN :: Int -> Coordinate -> [Coordinate]
-neighboursN 1 p = neighbours p
-neighboursN n p = concatMap (filter ((== n) . dist2 p) . neighboursN (n - 1 )) (neighbours p)
 
 type Map = M.Map Coordinate (Maybe Int)
 
