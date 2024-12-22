@@ -31,7 +31,7 @@ puzzle22 1 = solve1
 puzzle22 2 = solve2
 
 solve1 :: Solution Result
-solve1 = sum . map (fromIntegral . (!! 1999) . gen . read)
+solve1 = sum . map (fromIntegral . (!! 2000) . gen . read)
 
 solve2 :: Solution Result
 solve2 = undefined
@@ -42,14 +42,14 @@ type Result = Integer
 
 ----------------------------------------
 
--- >>> (gen 1) !! 1999
+-- >>> (gen 1) !! 2000
 -- 8685429
 --
 -- >>> take 10 $ gen 123
--- [15887950,16495136,527345,704524,1553684,12683156,11100544,12249484,7753432,5908254]
+-- [123,15887950,16495136,527345,704524,1553684,12683156,11100544,12249484,7753432]
 
 gen :: Int -> [Int]
-gen x = let next = genOne x in next : gen next
+gen x = x : gen (genOne x)
 
 -- >>> genOne 123
 -- 15887950
