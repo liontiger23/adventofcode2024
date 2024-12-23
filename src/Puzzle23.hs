@@ -17,7 +17,7 @@ import Data.Map.Strict ((!))
 import Data.Map.Strict qualified as M
 import Data.Set qualified as S
 import Data.Maybe (isJust, mapMaybe, isNothing, fromJust)
-import Data.List (nub, groupBy, elem, minimumBy, inits, sort, sortBy, stripPrefix)
+import Data.List (nub, groupBy, elem, minimumBy, inits, sort, sortBy, stripPrefix, intercalate)
 import Control.Monad.State
 import Control.Monad (void, zipWithM)
 import Data.Foldable (traverse_, foldlM, asum)
@@ -32,23 +32,24 @@ puzzle23 1 = solve1
 puzzle23 2 = solve2
 
 solve1 :: Solution Result
-solve1 = S.size . S.filter (any ((== 't') . head) . S.elems) . subnets 3 . parseNetwork
+solve1 = Part1 . S.size . S.filter (any ((== 't') . head) . S.elems) . (!! 3) . subnets . parseNetwork
 
 solve2 :: Solution Result
-solve2 = undefined
+solve2 = Part2 . S.elems . maxSubnet . parseNetwork
 
-type Result = Int
+data Result = Part1 Int | Part2 [Node]
+
+instance Show Result where
+  show (Part1 x) = show x
+  show (Part2 xs) = intercalate "," xs
 
 ----------------------------------------
 
--- >>> subnets 1 $ parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]
--- fromList [fromList ["ab"],fromList ["gy"],fromList ["tc"],fromList ["th"]]
---
--- >>> subnets 2 $ parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]
--- fromList [fromList ["ab","tc"],fromList ["ab","th"],fromList ["gy","th"],fromList ["tc","th"]]
---
--- >>> subnets 3 $ parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]
--- fromList [fromList ["ab","tc","th"]]
+maxSubnet :: Network -> S.Set Node
+maxSubnet = S.elemAt 0 . last . takeWhile (not . S.null) . subnets
+
+-- >>> take 3 $ subnets $ parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]
+-- [fromList [fromList ["ab"],fromList ["gy"],fromList ["tc"],fromList ["th"]],fromList [fromList ["ab","tc"],fromList ["ab","th"],fromList ["gy","th"],fromList ["tc","th"]],fromList [fromList ["ab","tc","th"]]]
 --
 -- >>> neighbours (parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]) (S.fromList ["ab"])
 -- ["tc","th"]
@@ -56,12 +57,14 @@ type Result = Int
 -- >>> parseNetwork ["tc-th","ab-tc","th-ab","th-gy"]
 -- fromList [("ab",fromList ["tc","th"]),("gy",fromList ["th"]),("tc",fromList ["ab","th"]),("th",fromList ["ab","gy","tc"])]
 
-subnets :: Int -> Network -> S.Set (S.Set Node)
-subnets 1 m = S.map S.singleton $ M.keysSet m
-subnets k m = S.fromList $ concatMap expand $ S.elems $ subnets (k - 1) m
+subnets :: Network -> [S.Set (S.Set Node)]
+subnets m = subnets' singletons
  where
-  expand :: S.Set Node -> [S.Set Node]
-  expand s = map (`S.insert` s) $ neighbours m s
+  singletons = S.map S.singleton $ M.keysSet m
+  subnets' cur = cur : subnets' (S.fromList $ concatMap expand $ S.elems cur)
+   where
+    expand :: S.Set Node -> [S.Set Node]
+    expand s = map (`S.insert` s) $ neighbours m s
 
 
 neighbours :: Network -> S.Set Node -> [Node]
