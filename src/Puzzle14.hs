@@ -47,12 +47,6 @@ skip (s : ss) xs = case drop s xs of
 slice :: Integer -> Integer -> [[Coordinate]] -> [Map]
 slice n m = map (Map n m) . transpose
 
--- >>> take 10 $ transpose [[0..],[0..]]
--- [[0,0],[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,9]]
-
-transpose :: [[a]] -> [[a]]
-transpose xs = map head xs : transpose (map tail xs)
-
 -- >>> quadrant 11 7 (0, 0)
 -- Just 1
 -- >>> quadrant 11 7 (0, 3)
